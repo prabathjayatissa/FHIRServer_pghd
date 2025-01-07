@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - FHIR Server</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    
+    <div class="container mt-4">
+        <h1>Patients</h1>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPatientModal">Add Patient</button>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Birth Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% patients.forEach(patient => { %>
+                    <tr>
+                        <td><%= patient.id %></td>
+                        <td>
+                            <% if (patient.name && patient.name[0]) { %>
+                                <%= patient.name[0].given?.join(' ') %> <%= patient.name[0].family %>
+                            <% } %>
+                        </td>
+                        <td><%= patient.birthDate %></td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewResource('<%= JSON.stringify(patient) %>')">View</button>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Patient Modal -->
+    <div class="modal fade" id="addPatientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Patient</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPatientForm">
+                        <div class="mb-3">
+                            <label class="form-label">Given Name</label>
+                            <input type="text" class="form-control" name="given">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Family Name</label>
+                            <input type="text" class="form-control" name="family">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" name="birthDate">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addPatient()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Resource Modal -->
+    <div class="modal fade" id="viewResourceModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Resource Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="resourceJson"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addPatient() {
+            const form = document.getElementById('addPatientForm');
+            const patient = {
+                resourceType: 'Patient',
+                name: [{
+                    given: [form.given.value],
+                    family: form.family.value
+                }],
+                birthDate: form.birthDate.value
+            };
+
+            fetch('/Patient', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(patient)
+            })
+            .then(response => response.json())
+            .then(() => {
+                location.reload();
+            });
+        }
+
+        function viewResource(resource) {
+            const parsed = JSON.parse(resource);
+            document.getElementById('resourceJson').textContent = JSON.stringify(parsed, null, 2);
+            new bootstrap.Modal(document.getElementById('viewResourceModal')).show();
+        }
+    </script>
+</body>
+</html>
