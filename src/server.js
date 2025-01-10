@@ -5,7 +5,6 @@ const path = require('path');
 const patientRoutes = require('./routes/patient');
 const observationRoutes = require('./routes/observation');
 const deviceRoutes = require('./routes/device');
-
 const app = express();
 const port = process.env.PORT || 3000;
 
